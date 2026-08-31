@@ -1,0 +1,407 @@
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Lenis smooth scroll global class */
+html.lenis {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* =========================================
+   Hero Section (moved from inline styles)
+========================================= */
+.hero-section {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+
+/* Feeds the WebGL video texture. Kept off-screen and invisible rather than
+   display:none — iOS Safari stops decoding a display:none <video>, which
+   would starve the texture of frames and leave the hero permanently black. */
+.hero-video-source {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hero-canvas-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  background-color: #050505;
+  will-change: opacity; /* Promoted to compositor layer for GSAP opacity tween */
+}
+
+.hero-final-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #050505;
+  background-image: url(/hero-final.webp);
+  background-size: cover;
+  background-position: center;
+  opacity: 1;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Single centered wrapper — children stack vertically, no overlap possible */
+.hero-panels {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 90%;
+  max-width: 580px;
+  pointer-events: none;
+}
+
+.hero-content {
+  width: 100%;
+  text-align: center;
+  opacity: 0;
+  will-change: opacity;
+}
+
+/* Brand-only glass panel — appears first */
+.hero-brand {
+  width: 100%;
+  text-align: center;
+  opacity: 0;
+  will-change: opacity;
+  padding: 1.25rem 2rem;
+}
+
+.hero-brand-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 0 12px rgba(255,255,255,0.25));
+}
+
+.hero-content h1 {
+  font-size: 2.4rem;
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-content p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.65);
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Section styling */
+.content-section {
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 6rem 2rem;
+  position: relative;
+  z-index: 1;
+  contain: content;
+}
+
+.section-inner {
+  max-width: 800px;
+  width: 100%;
+  will-change: opacity, transform; /* Promoted for GSAP scroll-triggered animations */
+}
+
+.section-inner h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.section-inner p {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 1rem;
+}
+
+/* =========================================
+   Navbar & Overlay
+========================================= */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 2rem 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 50;
+  pointer-events: none; /* Allows clicks to pass through empty space */
+}
+
+.nav-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  pointer-events: auto;
+  cursor: pointer;
+  mix-blend-mode: difference; /* Keeps it visible on light/dark backgrounds */
+  color: white;
+  text-transform: uppercase;
+}
+
+.hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 51;
+  padding: 10px;
+  mix-blend-mode: difference;
+}
+
+.hamburger .line {
+  width: 32px;
+  height: 2px;
+  background-color: white;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center right;
+  will-change: transform; /* Promoted for hamburger → X transition */
+}
+
+/* Transform into an X */
+.hamburger.open .line:nth-child(1) {
+  transform: rotate(-45deg) translateY(0px) translateX(-3px);
+}
+
+.hamburger.open .line:nth-child(2) {
+  transform: rotate(45deg) translateY(0px) translateX(-3px);
+}
+
+/* Nav Overlay */
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: opacity; /* Promoted for overlay fade transition */
+}
+
+.nav-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Overlay Background */
+.nav-overlay-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url(/hero-final.webp);
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+/* Darker filter with blur over the image */
+.nav-overlay-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 5, 0.85); /* Very low transparency / Mostly dark */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.nav-overlay-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  font-size: 2.5rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-block;
+  transform: translateY(30px);
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity; /* Promoted for staggered nav link animation */
+}
+
+.nav-links a:hover {
+  color: rgba(255, 255, 255, 0.4);
+  transform: translateX(20px);
+}
+
+.nav-overlay.open .nav-links a {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Staggered entry animation */
+.nav-overlay.open .nav-links li:nth-child(1) a { transition-delay: 0.1s; }
+.nav-overlay.open .nav-links li:nth-child(2) a { transition-delay: 0.15s; }
+.nav-overlay.open .nav-links li:nth-child(3) a { transition-delay: 0.2s; }
+.nav-overlay.open .nav-links li:nth-child(4) a { transition-delay: 0.25s; }
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1.5rem 2rem;
+  }
+  .nav-links a {
+    font-size: 1.75rem;
+  }
+  .hero-content h1 {
+    font-size: 1.6rem;
+  }
+  .hero-content p {
+    font-size: 0.9rem;
+    padding: 0 0.5rem;
+  }
+  .hero-brand-logo {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* =========================================
+   Scroll Indicator
+========================================= */
+.scroll-indicator {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  z-index: 15;
+  pointer-events: none;
+  will-change: opacity; /* Promoted for GSAP fade-out on scroll */
+}
+
+.scroll-text {
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.scroll-line {
+  width: 1px;
+  height: 50px;
+  background-color: rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-dot {
+  width: 100%;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  position: absolute;
+  top: -20px;
+  animation: scrollDownDrop 2.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+  will-change: top; /* Promoted for scroll-dot animation */
+}
+
+@keyframes scrollDownDrop {
+  0% {
+    top: -20px;
+  }
+  40% {
+    top: 100%;
+  }
+  100% {
+    top: 100%;
+  }
+}

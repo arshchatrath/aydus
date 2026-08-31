@@ -1,0 +1,113 @@
+/* =========================================
+   Footer — Glowing bars + oversized brand
+========================================= */
+
+.site-footer {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  overflow: hidden;
+  padding-top: 4rem;
+}
+
+/* ---- Glowing horizontal bars ---- */
+.footer-bars {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  z-index: 1;
+}
+
+.bar {
+  display: block;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 1px;
+}
+
+/* Different thicknesses */
+.bar-1 {
+  height: 5px;
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 20px rgba(255, 255, 255, 0.3),
+    0 0 40px rgba(255, 255, 255, 0.15);
+}
+
+.bar-2 {
+  height: 2px;
+  opacity: 0.7;
+  box-shadow:
+    0 0 6px rgba(255, 255, 255, 0.4),
+    0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.bar-3 {
+  height: 3px;
+  opacity: 0.8;
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.5),
+    0 0 25px rgba(255, 255, 255, 0.2);
+}
+
+.bar-4 {
+  height: 1px;
+  opacity: 0.5;
+  box-shadow:
+    0 0 4px rgba(255, 255, 255, 0.3),
+    0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* ---- Oversized brand text ---- */
+.footer-brand-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  text-align: center;
+  overflow: hidden;
+  /* Show the top portion of the text, clip the bottom */
+  max-height: 13vw;
+}
+
+.footer-brand-text {
+  display: block;
+  font-size: 18vw;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow:
+    0 0 30px rgba(255, 255, 255, 0.15),
+    0 0 60px rgba(255, 255, 255, 0.05);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ---- Copyright line ---- */
+.footer-copyright {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 1.5rem 0 2rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 768px) {
+  .site-footer {
+    padding-top: 3rem;
+  }
+
+  .footer-brand-wrapper {
+    max-height: 20vw;
+    margin-top: -3vw;
+  }
+
+  .footer-brand-text {
+    font-size: 22vw;
+  }
+}

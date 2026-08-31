@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Branding below is interpolated from .env (VITE_-prefixed vars) via Vite's
+         built-in %VAR% HTML replacement — edit .env, not this file, to rebrand. -->
+    <meta name="description" content="%VITE_SITE_DESCRIPTION%" />
+    <meta name="theme-color" content="%VITE_THEME_COLOR%" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="%VITE_SITE_TITLE%" />
+    <meta property="og:description" content="%VITE_SITE_DESCRIPTION%" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/hero-final.webp" />
+
+    <!-- Preconnect to Google Fonts for Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/hero-final.webp" as="image" type="image/webp" />
+
+    <title>%VITE_SITE_TITLE%</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,197 @@
+.loader-container {
+  position: fixed;
+  inset: 0;
+  background-color: #05060f;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 1s cubic-bezier(0.77, 0, 0.175, 1);
+  overflow: hidden;
+  will-change: opacity, transform;
+  contain: strict;
+}
+
+.loader-container.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.loader-container.hidden {
+  opacity: 0;
+  transform: scale(1.15); /* Scale up subtly on exit */
+  pointer-events: none;
+}
+
+/* Exit transition intensifies the glow */
+.loader-container.hidden .tardis-svg {
+  filter: brightness(2) drop-shadow(0 0 25px #6ec6ff);
+  transition: filter 0.8s ease-out;
+}
+
+/* Noise overlay for cinematic texture */
+.noise-overlay {
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  z-index: 1;
+  animation: noiseJitter 0.3s steps(3) infinite;
+}
+
+@keyframes noiseJitter {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-1%, -1%); }
+}
+
+/* Starfield */
+.starfield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform: translate3d(0, 0, 0); /* Force GPU compositing for star animations */
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  animation: twinkle ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+.loader-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+/* SVG Line Drawing */
+.tardis-svg {
+  width: 130px;
+  height: 195px;
+  overflow: visible;
+  transition: filter 0.3s ease;
+}
+
+.draw-path {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: drawIn 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.draw-path.box-main { animation-delay: 0.1s; }
+.draw-path.box-roof1 { animation-delay: 0.3s; stroke-dasharray: 130; stroke-dashoffset: 130; }
+.draw-path.box-roof2 { animation-delay: 0.4s; stroke-dasharray: 110; stroke-dashoffset: 110; }
+.draw-path.box-lamp { animation-delay: 0.6s; stroke-dasharray: 50; stroke-dashoffset: 50; }
+.draw-path.box-lamp-top { animation-delay: 0.7s; stroke-dasharray: 30; stroke-dashoffset: 30; }
+
+.draw-path.panel {
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation-duration: 1.2s;
+  animation-delay: 1.1s;
+  stroke: rgba(110, 198, 255, 0.4);
+}
+
+@keyframes drawIn {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Door seam pulse */
+.door-seam-line {
+  stroke-dasharray: 150;
+  stroke-dashoffset: 150;
+  /* Draw in immediately after panels, then pulse */
+  animation: drawIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards 1.3s, seamPulse 2.5s ease-in-out infinite 2.1s;
+}
+
+@keyframes seamPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(110, 198, 255, 0.2));
+    stroke: rgba(110, 198, 255, 0.4);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(110, 198, 255, 1));
+    stroke: rgba(255, 255, 255, 1);
+  }
+}
+
+/* Spiral Accent */
+.spiral-accent {
+  stroke-dasharray: 110;
+  stroke-dashoffset: 110;
+  stroke-linecap: round;
+  animation: drawIn 1.2s ease forwards 1.8s, spiralLoop 5s linear infinite 3.0s;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+}
+
+@keyframes spiralLoop {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -220; }
+}
+
+/* Typography & Progress */
+.loader-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  opacity: 0;
+  animation: fadeIn 1.2s ease forwards 1.5s; /* Appears smoothly as box draws */
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.loader-typography {
+  color: rgba(110, 198, 255, 0.6);
+  font-size: 0.65rem;
+  letter-spacing: 0.6em;
+  text-transform: uppercase;
+  font-weight: 300;
+  margin: 0;
+}
+
+.progress-track {
+  width: 140px;
+  height: 1px;
+  background: rgba(110, 198, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: #6ec6ff;
+  box-shadow: 0 0 8px #6ec6ff;
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: progressLoad 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards 1.8s;
+}
+
+@keyframes progressLoad {
+  0% { transform: scaleX(0); }
+  60% { transform: scaleX(0.7); }
+  100% { transform: scaleX(1); }
+}
