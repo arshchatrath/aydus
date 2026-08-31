@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -126,16 +126,45 @@ export default function Hero({ onReady }) {
   const canvasWrapperRef = useRef(null);
   const finalImageRef = useRef(null);
   const brandRef = useRef(null);
+  const ruleRef = useRef(null);
   const contentRef = useRef(null);
+  const headingRef = useRef(null);
+  const paragraphRef = useRef(null);
   const scrollIndicatorRef = useRef(null);
   const [videoEl, setVideoEl] = useState(null);
-  
+
   // We use a ref for progress to avoid React re-renders on every scroll tick
   const progressRef = useRef(0);
 
   // Track if timeline is created to prevent StrictMode double-creation
   const tlCreated = useRef(false);
   const timelineRef = useRef(null);
+  const revealTlRef = useRef(null);
+
+  // Split into per-word spans once, before paint, so the GSAP reveal can
+  // animate each word independently. Runs client-only (no SSR here) and
+  // stashes the original text so StrictMode's double-invoke can restore it.
+  const headingWordsRef = useRef([]);
+  useLayoutEffect(() => {
+    const el = headingRef.current;
+    if (!el) return;
+    if (el.dataset.hxOriginal === undefined) el.dataset.hxOriginal = el.textContent;
+
+    const words = el.dataset.hxOriginal.split(/\s+/).filter(Boolean);
+    el.textContent = '';
+    headingWordsRef.current = words.map((word, i) => {
+      const span = document.createElement('span');
+      span.className = 'hero-word';
+      span.textContent = word;
+      el.appendChild(span);
+      if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
+      return span;
+    });
+
+    return () => {
+      if (el.dataset.hxOriginal !== undefined) el.textContent = el.dataset.hxOriginal;
+    };
+  }, []);
 
   // Callback ref to guarantee we get the video node the moment it renders
   const videoCallbackRef = (node) => {
@@ -157,6 +186,48 @@ export default function Hero({ onReady }) {
       // Create ScrollTrigger only once
       if (!tlCreated.current) {
         tlCreated.current = true;
+
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const revealed = { current: false };
+
+        // The background crossfade (video canvas -> resting frame) stays tied
+        // to raw scroll position via scrub — it has to track the shader
+        // finishing exactly. The foreground reveal below deliberately does
+        // NOT scrub: linear, scroll-tied motion reads as janky on staggered
+        // text, so it plays on its own eased timeline that's merely toggled
+        // on/off by scroll position, giving it a proper, snappy curve.
+        gsap.set(ruleRef.current, { scaleX: prefersReduced ? 1 : 0 });
+        gsap.set(brandRef.current, { opacity: 0, scale: prefersReduced ? 1 : 0.9 });
+        gsap.set(contentRef.current, { opacity: 0 });
+        gsap.set(
+          headingWordsRef.current,
+          prefersReduced ? { opacity: 0 } : { opacity: 0, yPercent: 35, filter: 'blur(9px)' }
+        );
+        gsap.set(paragraphRef.current, { opacity: 0, y: prefersReduced ? 0 : 14 });
+
+        const revealTl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+
+        if (prefersReduced) {
+          revealTl
+            .to(contentRef.current, { opacity: 1, duration: 0.2 }, 0)
+            .to(brandRef.current, { opacity: 1, duration: 0.2 }, 0)
+            .to(headingWordsRef.current, { opacity: 1, duration: 0.2 }, 0)
+            .to(paragraphRef.current, { opacity: 1, duration: 0.2 }, 0);
+        } else {
+          revealTl
+            .to(ruleRef.current, { scaleX: 1, duration: 0.6, ease: 'expo.out' }, 0)
+            .to(brandRef.current, { opacity: 1, scale: 1, duration: 0.5 }, 0.1)
+            .to(contentRef.current, { opacity: 1, duration: 0.4 }, 0.25)
+            .to(
+              headingWordsRef.current,
+              { opacity: 1, yPercent: 0, filter: 'blur(0px)', duration: 0.75, stagger: 0.045 },
+              0.35
+            )
+            .to(paragraphRef.current, { opacity: 1, y: 0, duration: 0.6 }, 0.8);
+        }
+
+        revealTlRef.current = revealTl;
+
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: containerRef.current,
@@ -166,6 +237,18 @@ export default function Hero({ onReady }) {
             pin: true,
             onUpdate: (self) => {
               progressRef.current = self.progress;
+
+              // Toggle the foreground reveal once scroll crosses the same
+              // point the background crossfade lands on, reversing cleanly
+              // if the user scrolls back up.
+              const shouldReveal = self.progress > 0.95;
+              if (shouldReveal && !revealed.current) {
+                revealed.current = true;
+                revealTl.play();
+              } else if (!shouldReveal && revealed.current) {
+                revealed.current = false;
+                revealTl.reverse();
+              }
             },
           },
         });
@@ -173,19 +256,13 @@ export default function Hero({ onReady }) {
         // Fade out scroll indicator immediately as user starts scrolling
         tl.to(scrollIndicatorRef.current, { opacity: 0, duration: 0.05 }, 0);
 
-        // At progress 1.0, the shader is fully white. 
+        // At progress 1.0, the shader is fully white.
         // We can fade in the video canvas right at the end to reveal the crisp resting background image.
         tl.to(canvasWrapperRef.current, { opacity: 0, duration: 0.1 }, 0.95);
-        
-        // Brand panel appears first at the moment the video ends
-        tl.to(brandRef.current, { opacity: 1, duration: 0.05, ease: 'power2.out' }, 0.95);
-        
-        // Content panel fades in slightly after the brand panel
-        tl.to(contentRef.current, { opacity: 1, duration: 0.08, ease: 'power2.out' }, 0.97);
 
         // Force GSAP to recalculate all other triggers (like Sections) now that we've added a 4000px pin spacer
         ScrollTrigger.refresh();
-        
+
         timelineRef.current = tl;
       }
 
@@ -221,6 +298,10 @@ export default function Hero({ onReady }) {
       if (timelineRef.current) {
         timelineRef.current.kill();
         timelineRef.current = null;
+      }
+      if (revealTlRef.current) {
+        revealTlRef.current.kill();
+        revealTlRef.current = null;
       }
       tlCreated.current = false;
     };
@@ -272,17 +353,20 @@ export default function Hero({ onReady }) {
         </div>
       </div>
 
-      {/* Stacked panels wrapper — centered once, children stack with gap */}
+      {/* Stacked panels wrapper — centered once, children stack with gap.
+          No card/blur here by design: an unbounded radial wash (see
+          .hero-panels::before) carries contrast instead of a boxed panel. */}
       <div className="hero-panels">
-        {/* Brand Glass Panel — appears first, swap /logo.png for your real logo later */}
-        <div ref={brandRef} className="hero-brand glass-panel">
+        {/* Brand mark — appears first, swap /logo.png for your real logo later */}
+        <div ref={brandRef} className="hero-brand">
           <img src={siteConfig.brand.logoSrc} alt={siteConfig.brand.logoAlt} className="hero-brand-logo" />
         </div>
 
-        {/* Content Glass Panel — appears after the brand */}
-        <div ref={contentRef} className="hero-content glass-panel">
-          <h1>{siteConfig.hero.heading}</h1>
-          <p>{siteConfig.hero.body}</p>
+        <span ref={ruleRef} className="hero-rule" aria-hidden="true" />
+
+        <div ref={contentRef} className="hero-content">
+          <h1 ref={headingRef}>{siteConfig.hero.heading}</h1>
+          <p ref={paragraphRef}>{siteConfig.hero.body}</p>
         </div>
       </div>
 
