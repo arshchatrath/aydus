@@ -17,31 +17,31 @@ const useIsomorphicLayoutEffect =
 const SECTIONS_DATA = [
   {
     id: 'work',
-    title: 'Selected work',
-    meta: 'Brand systems, websites, product interfaces',
+    title: 'We are kingmakers',
+    meta: 'Attention, mindshare, and markets.',
     body: [
-      'We work with companies that have outgrown their first identity. Most engagements run eight to twelve weeks, from research through to a design system your team can maintain without us.',
-      'Recent projects include a public-markets research platform, a chain of neighbourhood bakeries, and a European rail operator’s booking flow.',
+      'The average valuation of companies we work with is $5B. They come to us because even a $20B company cannot assemble this mix of people.',
+      'For them, we win attention, mindshare, and markets — at population-level scale. In the last 12 months alone, we’ve driven 2B+ views and moved our clients’ brands accordingly.',
     ],
-    action: { label: 'See the case studies', href: '#case-studies' },
+    action: { label: 'See what we’ve moved', href: '#case-studies' },
   },
   {
     id: 'about',
-    title: 'How we work',
-    meta: 'Eight people. Founded 2016.',
+    title: 'The most valuable people on earth',
+    meta: 'The highest concentration of them, globally.',
     body: [
-      'Designers, writers, and engineers who ship in the same room. There is no account layer between you and the people doing the work.',
-      'We take on seven projects a year. The limit is the point: it keeps the thinking slow and the timelines honest.',
+      'If you deeply understand how social media works, you already know that skill is valuable. It’s worth far more than you know — the people who can command the attention of 100 million people at will are the most valuable individuals on earth.',
+      'Aydus is the highest concentration of those people globally. Here, you operate at the edge of social media, at a scale maybe ten companies on earth get to touch.',
     ],
-    action: { label: 'Read the studio notes', href: '#notes' },
+    action: { label: 'How we work', href: '#notes' },
   },
   {
     id: 'contact',
-    title: 'Start a project',
-    meta: 'Lisbon and remote',
+    title: 'An institution, not a company',
+    meta: 'Defining the next 20 years.',
     body: [
-      'Tell us what you are building and what is in the way. We read everything and reply within two working days, usually with questions before a proposal.',
-      'For press, speaking, or anything else, the same address reaches us.',
+      'We are not building a company. We’re building an institution of people who define how attention is won over the next 20 years.',
+      'If that’s you, the same address reaches us.',
     ],
     action: { label: siteConfig.contact.email, href: `mailto:${siteConfig.contact.email}` },
   },
@@ -197,7 +197,7 @@ const STYLES = `
   --sx-muted: #918D85;
   --sx-rule: rgba(237, 233, 225, 0.18);
   --sx-accent: #9AAAC4;
-  --sx-display: 'Times New Roman', Times, ui-serif, Georgia, serif;
+  --sx-display: 'Fraunces', 'Times New Roman', Times, ui-serif, Georgia, serif;
   --sx-body: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
 
   position: relative;

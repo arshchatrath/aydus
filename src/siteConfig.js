@@ -25,8 +25,8 @@ export const siteConfig = {
     { label: 'Contact', href: '#contact' },
   ],
   hero: {
-    heading: 'Lorem Ipsum Dolor',
-    body: 'Consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
+    heading: 'Attention is the last scarce resource',
+    body: 'Building is commoditized — AI can write the code, design the product, run the operation. The one thing getting more difficult, and more expensive, every year is human attention. That battle is fought on social media, and we are kingmakers in it.',
   },
   contact: {
     email: import.meta.env.VITE_CONTACT_EMAIL || 'hello@studio.example',

@@ -1,5 +1,6 @@
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-display: 'Fraunces', 'Times New Roman', ui-serif, Georgia, serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -88,18 +89,14 @@ html.lenis {
   pointer-events: none;
 }
 
-/* Glassmorphism utilities */
-.glass-panel {
-  background: rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
+/* No card, no blur — the reveal at the end of the hero pin is carried by
+   typography and motion instead of a boxed panel: a soft light-fall behind
+   the type for contrast, a hairline that draws itself open, a logo that
+   breathes, and headline words that resolve out of a shallow blur. */
 
-/* Single centered wrapper — children stack vertically, no overlap possible */
+/* Single centered wrapper — children stack vertically, no overlap possible.
+   ::before is an unbounded radial wash (no edges to read as a "panel") that
+   keeps the type legible over whatever the final video frame is showing. */
 .hero-panels {
   position: absolute;
   top: 50%;
@@ -109,53 +106,111 @@ html.lenis {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 22px;
   width: 90%;
-  max-width: 580px;
+  max-width: 620px;
+  pointer-events: none;
+}
+
+.hero-panels::before {
+  content: '';
+  position: absolute;
+  inset: -20% -35%;
+  background: radial-gradient(50% 55% at 50% 50%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 72%);
   pointer-events: none;
 }
 
 .hero-content {
+  position: relative;
   width: 100%;
   text-align: center;
   opacity: 0;
   will-change: opacity;
 }
 
-/* Brand-only glass panel — appears first */
+/* Brand mark — a bare logo with its own soft glow, no card behind it:
+   boxing it together with the copy below made the pair read as two stacked
+   tiles rather than one composition. */
 .hero-brand {
+  position: relative;
   width: 100%;
   text-align: center;
   opacity: 0;
-  will-change: opacity;
-  padding: 1.25rem 2rem;
+  will-change: opacity, transform;
 }
 
 .hero-brand-logo {
-  width: 72px;
-  height: 72px;
+  width: 58px;
+  height: 58px;
   object-fit: contain;
   display: block;
   margin: 0 auto;
-  filter: drop-shadow(0 0 12px rgba(255,255,255,0.25));
+  animation: heroLogoGlow 5s ease-in-out infinite;
+}
+
+@keyframes heroLogoGlow {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.18)); }
+  50% { filter: drop-shadow(0 0 24px rgba(255, 255, 255, 0.36)); }
+}
+
+/* Thin rule that draws open between the mark and the headline — the same
+   accent-line language the scroll sections use, in miniature. */
+.hero-rule {
+  position: relative;
+  display: block;
+  width: 46px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(237, 233, 225, 0.6), transparent);
 }
 
 .hero-content h1 {
-  font-size: 2.4rem;
-  margin-bottom: 0.6rem;
-  letter-spacing: -0.02em;
-  font-weight: 700;
-  background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 4.6vw, 3.5rem);
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1.16;
+  margin-bottom: 1.1rem;
+  letter-spacing: -0.01em;
+  background: linear-gradient(100deg, #E7E2D6 32%, #FFFFFF 48%, #E7E2D6 64%);
+  background-size: 240% 100%;
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: heroTextSheen 8s ease-in-out infinite;
+}
+
+@keyframes heroTextSheen {
+  0% { background-position: 200% 0; }
+  100% { background-position: -60% 0; }
+}
+
+/* Per-word spans for the GSAP blur/rise reveal. */
+.hero-word {
+  display: inline-block;
+  will-change: opacity, transform, filter;
 }
 
 .hero-content p {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.65);
-  max-width: 480px;
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: rgba(237, 233, 225, 0.62);
+  max-width: 460px;
   margin: 0 auto;
-  line-height: 1.6;
+  line-height: 1.7;
+  letter-spacing: 0.002em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-brand-logo,
+  .hero-content h1 {
+    animation: none;
+  }
+  .hero-content h1 {
+    background-position: 0 0;
+  }
 }
 
 /* Section styling */
@@ -338,16 +393,15 @@ html.lenis {
   .nav-links a {
     font-size: 1.75rem;
   }
-  .hero-content h1 {
-    font-size: 1.6rem;
+  .hero-panels {
+    gap: 16px;
   }
   .hero-content p {
-    font-size: 0.9rem;
     padding: 0 0.5rem;
   }
   .hero-brand-logo {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
   }
 }
 
