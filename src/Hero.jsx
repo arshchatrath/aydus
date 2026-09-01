@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useLayoutEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -126,10 +126,6 @@ export default function Hero({ onReady }) {
   const canvasWrapperRef = useRef(null);
   const finalImageRef = useRef(null);
   const brandRef = useRef(null);
-  const ruleRef = useRef(null);
-  const contentRef = useRef(null);
-  const headingRef = useRef(null);
-  const paragraphRef = useRef(null);
   const scrollIndicatorRef = useRef(null);
   const [videoEl, setVideoEl] = useState(null);
 
@@ -140,31 +136,6 @@ export default function Hero({ onReady }) {
   const tlCreated = useRef(false);
   const timelineRef = useRef(null);
   const revealTlRef = useRef(null);
-
-  // Split into per-word spans once, before paint, so the GSAP reveal can
-  // animate each word independently. Runs client-only (no SSR here) and
-  // stashes the original text so StrictMode's double-invoke can restore it.
-  const headingWordsRef = useRef([]);
-  useLayoutEffect(() => {
-    const el = headingRef.current;
-    if (!el) return;
-    if (el.dataset.hxOriginal === undefined) el.dataset.hxOriginal = el.textContent;
-
-    const words = el.dataset.hxOriginal.split(/\s+/).filter(Boolean);
-    el.textContent = '';
-    headingWordsRef.current = words.map((word, i) => {
-      const span = document.createElement('span');
-      span.className = 'hero-word';
-      span.textContent = word;
-      el.appendChild(span);
-      if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
-      return span;
-    });
-
-    return () => {
-      if (el.dataset.hxOriginal !== undefined) el.textContent = el.dataset.hxOriginal;
-    };
-  }, []);
 
   // Callback ref to guarantee we get the video node the moment it renders
   const videoCallbackRef = (node) => {
@@ -177,11 +148,39 @@ export default function Hero({ onReady }) {
     if (!videoEl) return;
 
     let didFire = false;
+    let readySignaled = false;
+
+    // The video is scrubbed, never played, so the browser won't decode and
+    // present frame 0 on its own — the WebGL texture stays black until the
+    // first scroll seek. Signal readiness (which lifts the loader) only once
+    // a real frame has actually been painted into the texture.
+    const signalReady = () => {
+      if (readySignaled) return;
+      readySignaled = true;
+      if (onReady) onReady();
+    };
+
+    const primeFirstFrame = () => {
+      // Muted + playsInline lets us autoplay one frame then pause; the seek
+      // nudge forces a decode even if play() is blocked.
+      videoEl.play().then(() => videoEl.pause()).catch(() => {});
+      try { videoEl.currentTime = 0.04; } catch { /* not seekable yet */ }
+
+      if ('requestVideoFrameCallback' in videoEl) {
+        videoEl.requestVideoFrameCallback(() => signalReady());
+      } else {
+        videoEl.addEventListener('seeked', signalReady, { once: true });
+      }
+      // Hard cap so the loader never hangs if the frame callback never fires.
+      setTimeout(signalReady, 4000);
+    };
 
     // Setup the timeline and trigger onReady when video is at least minimally loaded
     const handleReady = () => {
       if (didFire) return; // guard against double-fire
       didFire = true;
+
+      primeFirstFrame();
 
       // Create ScrollTrigger only once
       if (!tlCreated.current) {
@@ -196,34 +195,14 @@ export default function Hero({ onReady }) {
         // NOT scrub: linear, scroll-tied motion reads as janky on staggered
         // text, so it plays on its own eased timeline that's merely toggled
         // on/off by scroll position, giving it a proper, snappy curve.
-        gsap.set(ruleRef.current, { scaleX: prefersReduced ? 1 : 0 });
         gsap.set(brandRef.current, { opacity: 0, scale: prefersReduced ? 1 : 0.9 });
-        gsap.set(contentRef.current, { opacity: 0 });
-        gsap.set(
-          headingWordsRef.current,
-          prefersReduced ? { opacity: 0 } : { opacity: 0, yPercent: 35, filter: 'blur(9px)' }
-        );
-        gsap.set(paragraphRef.current, { opacity: 0, y: prefersReduced ? 0 : 14 });
 
         const revealTl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
 
         if (prefersReduced) {
-          revealTl
-            .to(contentRef.current, { opacity: 1, duration: 0.2 }, 0)
-            .to(brandRef.current, { opacity: 1, duration: 0.2 }, 0)
-            .to(headingWordsRef.current, { opacity: 1, duration: 0.2 }, 0)
-            .to(paragraphRef.current, { opacity: 1, duration: 0.2 }, 0);
+          revealTl.to(brandRef.current, { opacity: 1, duration: 0.2 }, 0);
         } else {
-          revealTl
-            .to(ruleRef.current, { scaleX: 1, duration: 0.6, ease: 'expo.out' }, 0)
-            .to(brandRef.current, { opacity: 1, scale: 1, duration: 0.5 }, 0.1)
-            .to(contentRef.current, { opacity: 1, duration: 0.4 }, 0.25)
-            .to(
-              headingWordsRef.current,
-              { opacity: 1, yPercent: 0, filter: 'blur(0px)', duration: 0.75, stagger: 0.045 },
-              0.35
-            )
-            .to(paragraphRef.current, { opacity: 1, y: 0, duration: 0.6 }, 0.8);
+          revealTl.to(brandRef.current, { opacity: 1, scale: 1, duration: 0.5 }, 0.1);
         }
 
         revealTlRef.current = revealTl;
@@ -265,9 +244,6 @@ export default function Hero({ onReady }) {
 
         timelineRef.current = tl;
       }
-
-      // Signal to App that the video is ready to be shown
-      if (onReady) onReady();
     };
 
     // iOS Safari never fires loadeddata/canplaythrough without a user gesture.
@@ -319,8 +295,9 @@ export default function Hero({ onReady }) {
         document.body
       )}
 
-      {/* Off-screen video element that feeds the WebGL texture — preload="metadata"
-          is the highest level iOS Safari will honour without a user gesture;
+      {/* Off-screen video element that feeds the WebGL texture — preload="auto"
+          so the first frame is decoded before the loader lifts (iOS ignores it
+          without a gesture, but the touchstart iosUnlock below covers that);
           crossOrigin removed to avoid CORS preflight failures on same-origin
           video across Android WebViews. Deliberately NOT display:none: iOS
           Safari suspends decoding on display:none video elements, so the
@@ -331,7 +308,7 @@ export default function Hero({ onReady }) {
         src="/hero-video.mp4"
         muted
         playsInline
-        preload="metadata"
+        preload="auto"
         className="hero-video-source"
       />
 
@@ -360,13 +337,6 @@ export default function Hero({ onReady }) {
         {/* Brand mark — appears first, swap /logo.png for your real logo later */}
         <div ref={brandRef} className="hero-brand">
           <img src={siteConfig.brand.logoSrc} alt={siteConfig.brand.logoAlt} className="hero-brand-logo" />
-        </div>
-
-        <span ref={ruleRef} className="hero-rule" aria-hidden="true" />
-
-        <div ref={contentRef} className="hero-content">
-          <h1 ref={headingRef}>{siteConfig.hero.heading}</h1>
-          <p ref={paragraphRef}>{siteConfig.hero.body}</p>
         </div>
       </div>
 

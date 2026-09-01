@@ -17,6 +17,17 @@ const useIsomorphicLayoutEffect =
 const SECTIONS_DATA = [
   {
     id: 'work',
+    title: 'Attention is the last scarce resource.',
+    meta: 'Attention, mindshare, and markets.',
+    body: [
+      'Building is commoditized. AI can write code, design the product, run the operation, and soon most of it will be free. One thing is getting more difficult and more expensive every year.',
+      'Human attention.',
+      'There are still only 24 hours in a day, and everyone is competing for them. When everything else falls to zero, attention is the last scarce resource on earth. That battle is being fought on social media.',
+    ],
+    action: { label: 'See what we’ve moved', href: '#case-studies' },
+  },
+  {
+    id: 'work',
     title: 'We are kingmakers',
     meta: 'Attention, mindshare, and markets.',
     body: [

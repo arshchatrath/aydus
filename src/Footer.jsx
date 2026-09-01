@@ -19,10 +19,6 @@ const Footer = React.memo(function Footer() {
         <span className="bar bar-3"></span>
         <span className="bar bar-4"></span>
       </div>
-
-      <p className="footer-copyright">
-        &copy; {currentYear} {siteConfig.company.name}. All rights reserved.
-      </p>
     </footer>
   );
 });
